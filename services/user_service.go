@@ -6,7 +6,7 @@ import (
 
 	"cloud.google.com/go/firestore"
 	firebase "firebase.google.com/go"
-	"github.com/imthewolverine/schoolPolice_backend/models"
+	"github.com/imthewolverine/schoolPolice-backend/models"
 )
 
 var client *firestore.Client

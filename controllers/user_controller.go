@@ -4,8 +4,8 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/imthewolverine/schoolPolice_backend/models"
-	"github.com/imthewolverine/schoolPolice_backend/services"
+	"github.com/imthewolverine/schoolPolice-backend/models"
+	"github.com/imthewolverine/schoolPolice-backend/services"
 )
 
 // CreateUser - Example handler for creating a new user

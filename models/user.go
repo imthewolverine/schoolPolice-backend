@@ -1,9 +1,12 @@
 package models
 
-// User - Example user model
 type User struct {
-    ID       string `json:"id" firestore:"id,omitempty"`
-    Name     string `json:"name" firestore:"name"`
-    Email    string `json:"email" firestore:"email"`
-    Password string `json:"-" firestore:"password,omitempty"` // Hide password in JSON
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
+// A sample user for demonstration purposes
+var SampleUser = User{
+	Username: "admin",
+	Password: "123", // Store passwords securely with hashing in a real app
 }
