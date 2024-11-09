@@ -38,7 +38,7 @@ func main() {
 }
 
 func setupFirestore(ctx context.Context) (*firestore.Client, error) {
-    projectID := "your-firebase-project-id" // Replace with your Firebase project ID
+    projectID := "school-police-c59de" // Replace with your Firebase project ID
 
     // Use service account key specified by GOOGLE_APPLICATION_CREDENTIALS
     sa := option.WithCredentialsFile(os.Getenv("GOOGLE_APPLICATION_CREDENTIALS"))
