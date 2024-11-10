@@ -10,14 +10,18 @@ import (
 func RegisterRoutes(router *gin.Engine, firestoreClient *firestore.Client) {
     authService := services.NewAuthService(firestoreClient)
     userService := services.NewUserService(firestoreClient)
+    adService := services.NewAdService(firestoreClient)
 
-    // Define the /register route
+    // User routes
     router.POST("/register", func(c *gin.Context) {
         controllers.RegisterUser(c, userService)
     })
-
-    // Existing login route
     router.POST("/login", func(c *gin.Context) {
         controllers.Login(c, authService)
+    })
+
+    // Ad routes
+    router.GET("/ads", func(c *gin.Context) {
+        controllers.GetAllAds(c, adService)
     })
 }
