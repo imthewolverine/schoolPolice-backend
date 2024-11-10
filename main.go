@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 
@@ -13,10 +14,10 @@ import (
 	"google.golang.org/api/option"
 )
 
+
 func main() {
     // Load environment variables
     config.LoadEnv()
-
     // Initialize context
     ctx := context.Background()
 
@@ -25,7 +26,7 @@ func main() {
     if err != nil {
         log.Fatalf("failed to set up Firestore: %v", err)
     }
-    defer firestoreClient.Close() // Close client when done
+    defer firestoreClient.Close()
 
     // Initialize Gin router
     r := gin.Default()
@@ -38,11 +39,15 @@ func main() {
 }
 
 func setupFirestore(ctx context.Context) (*firestore.Client, error) {
-    projectID := "school-police-c59de" // Replace with your Firebase project ID
-
-    // Use service account key specified by GOOGLE_APPLICATION_CREDENTIALS
-    sa := option.WithCredentialsFile(os.Getenv("GOOGLE_APPLICATION_CREDENTIALS"))
-    app, err := firebase.NewApp(ctx, &firebase.Config{ProjectID: projectID}, sa)
+    credentialsPath := os.Getenv("GOOGLE_APPLICATION_CREDENTIALS")
+    
+    if credentialsPath == "" {
+        return nil, fmt.Errorf("GOOGLE_APPLICATION_CREDENTIALS is not set")
+    }
+    
+    // Initialize Firebase app with credentials
+    sa := option.WithCredentialsFile(credentialsPath)
+    app, err := firebase.NewApp(ctx, nil, sa) // Omit ProjectID if credentials contain it
     if err != nil {
         return nil, err
     }
@@ -54,3 +59,4 @@ func setupFirestore(ctx context.Context) (*firestore.Client, error) {
 
     return client, nil
 }
+

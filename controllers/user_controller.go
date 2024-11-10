@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -8,17 +9,41 @@ import (
 	"github.com/imthewolverine/schoolPolice-backend/services"
 )
 
-// CreateUser - Example handler for creating a new user
-func CreateUser(c *gin.Context) {
-    var user models.User
-    if err := c.ShouldBindJSON(&user); err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+type RegisterRequest struct {
+    Name         string `json:"name" binding:"required"`
+    Email        string `json:"email" binding:"required"`
+    Password     string `json:"password" binding:"required"`
+    Address      string `json:"address"`
+    PhoneNumber  string `json:"phoneNumber"`
+    Rating       float64 `json:"rating"`
+    TotalWorkCount int   `json:"totalWorkCount"`
+    UserID       int     `json:"userid"`
+}
+
+func RegisterUser(c *gin.Context, userService *services.UserService) {
+    var req RegisterRequest
+    if err := c.ShouldBindJSON(&req); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
         return
     }
-    createdUser, err := services.CreateUser(user)
-    if err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
+
+    user := models.User{
+        Name:          req.Name,
+        Email:         req.Email,
+        Password:      req.Password, // In production, hash the password
+        Address:       req.Address,
+        PhoneNumber:   req.PhoneNumber,
+        Rating:        req.Rating,
+        TotalWorkCount: req.TotalWorkCount,
+        UserID:        req.UserID,
+    }
+
+    // Create user in Firestore
+    ctx := context.Background()
+    if err := userService.CreateUser(ctx, user); err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
         return
     }
-    c.JSON(http.StatusOK, createdUser)
+
+    c.JSON(http.StatusOK, gin.H{"message": "User created successfully"})
 }

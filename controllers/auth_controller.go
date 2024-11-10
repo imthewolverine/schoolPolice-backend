@@ -4,29 +4,36 @@ import (
 	"context"
 	"net/http"
 
-	"cloud.google.com/go/firestore"
 	"github.com/gin-gonic/gin"
+	"github.com/imthewolverine/schoolPolice-backend/services"
 )
 
-// Login handles user login by retrieving data from Firestore
-func Login(c *gin.Context, firestoreClient *firestore.Client) {
-    // Access Firestore client here
-    ctx := context.Background()
+type LoginRequest struct {
+    UsernameOrEmail string `json:"usernameOrEmail"`
+    Password        string `json:"password"`
+}
 
-    // Example Firestore query to get all users
-    users := firestoreClient.Collection("users")
-    docs, err := users.Documents(ctx).GetAll()
-    if err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve users"})
+type LoginResponse struct {
+    Token string `json:"token"`
+    Error string `json:"error,omitempty"`
+}
+
+// Login handles the login request, authenticates the user, and returns a JWT token
+func Login(c *gin.Context, authService *services.AuthService) {
+    var req LoginRequest
+    if err := c.ShouldBindJSON(&req); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
         return
     }
 
-    // Process documents and store user data
-    var userData []map[string]interface{}
-    for _, doc := range docs {
-        userData = append(userData, doc.Data())
+    // Authenticate user
+    ctx := context.Background()
+    token, err := authService.AuthenticateUser(ctx, req.UsernameOrEmail, req.Password)
+    if err != nil {
+        c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+        return
     }
 
-    // Return the user data as a JSON response
-    c.JSON(http.StatusOK, gin.H{"users": userData})
+    // Return JWT token
+    c.JSON(http.StatusOK, LoginResponse{Token: token})
 }
