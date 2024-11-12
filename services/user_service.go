@@ -31,7 +31,16 @@ func (s *UserService) CreateUser(ctx context.Context, user models.User) error {
         return errors.New("user with this name already exists")
     }
 
-    // Add the new user to Firestore
+    // Step 1: Create a new account document with an initial balance of 0
+    accountRef := s.FirestoreClient.Collection("account").NewDoc()
+    _, err = accountRef.Set(ctx, map[string]interface{}{
+        "balance": 0,  // Initial balance
+    })
+    if err != nil {
+        return errors.New("failed to create account for user")
+    }
+
+    // Step 2: Add the new user to Firestore, including the account reference
     _, _, err = users.Add(ctx, map[string]interface{}{
         "name":           user.Name,
         "email":          user.Email,
@@ -41,6 +50,7 @@ func (s *UserService) CreateUser(ctx context.Context, user models.User) error {
         "rating":         user.Rating,
         "totalWorkCount": user.TotalWorkCount,
         "userid":         user.UserID,
+        "account":        accountRef,     // Reference to the new account document
     })
 
     return err
