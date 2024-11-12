@@ -14,49 +14,46 @@ import (
 	"google.golang.org/api/option"
 )
 
-
 func main() {
-    // Load environment variables
-    config.LoadEnv()
-    // Initialize context
-    ctx := context.Background()
+	// Load environment variables
+	config.LoadEnv()
+	// Initialize context
+	ctx := context.Background()
 
-    // Setup Firestore client
-    firestoreClient, err := setupFirestore(ctx)
-    if err != nil {
-        log.Fatalf("failed to set up Firestore: %v", err)
-    }
-    defer firestoreClient.Close()
+	// Setup Firestore client
+	firestoreClient, err := setupFirestore(ctx)
+	if err != nil {
+		log.Fatalf("failed to set up Firestore: %v", err)
+	}
+	defer firestoreClient.Close()
 
-    // Initialize Gin router
-    r := gin.Default()
+	// Initialize Gin router
+	r := gin.Default()
 
-    // Pass Firestore client to routes
-    routes.RegisterRoutes(r, firestoreClient)
+	// Pass Firestore client to routes
+	routes.RegisterRoutes(r, firestoreClient)
 
-    // Start server
-    r.Run(":8080") // Run on port 8080
+	// Start server
+	r.Run(":8080") // Run on port 8080
 }
 
 func setupFirestore(ctx context.Context) (*firestore.Client, error) {
-    credentialsPath := os.Getenv("GOOGLE_APPLICATION_CREDENTIALS")
-    
-    if credentialsPath == "" {
-        return nil, fmt.Errorf("GOOGLE_APPLICATION_CREDENTIALS is not set")
-    }
-    
-    // Initialize Firebase app with credentials
-    sa := option.WithCredentialsFile(credentialsPath)
-    app, err := firebase.NewApp(ctx, nil, sa) // Omit ProjectID if credentials contain it
-    if err != nil {
-        return nil, err
-    }
+	credentialsPath := os.Getenv("GOOGLE_APPLICATION_CREDENTIALS")
+	if credentialsPath == "" {
+		return nil, fmt.Errorf("GOOGLE_APPLICATION_CREDENTIALS is not set")
+	}
 
-    client, err := app.Firestore(ctx)
-    if err != nil {
-        return nil, err
-    }
+	// Initialize Firebase app with credentials
+	sa := option.WithCredentialsFile(credentialsPath)
+	app, err := firebase.NewApp(ctx, nil, sa)
+	if err != nil {
+		return nil, err
+	}
 
-    return client, nil
+	client, err := app.Firestore(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return client, nil
 }
-
