@@ -11,10 +11,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/imthewolverine/schoolPolice-backend/config"
 	"github.com/imthewolverine/schoolPolice-backend/routes"
+	"google.golang.org/api/option"
 )
 
 func main() {
-	log.Println("Starting application...")
 
 	// Load environment variables
 	config.LoadEnv()
@@ -51,20 +51,23 @@ func main() {
 	}
 }
 
-func setupFirestore(ctx context.Context) (*firestore.Client, error) {
-	log.Println("Initializing Firestore...")
 
-	// Initialize Firebase app with default credentials on Cloud Run
-	app, err := firebase.NewApp(ctx, nil) // No credentials file needed for default account
+func setupFirestore(ctx context.Context) (*firestore.Client, error) {
+	credentialsPath := os.Getenv("GOOGLE_APPLICATION_CREDENTIALS")
+	if credentialsPath == "" {
+		return nil, fmt.Errorf("GOOGLE_APPLICATION_CREDENTIALS is not set")
+	}
+
+	// Initialize Firebase app with credentials
+	sa := option.WithCredentialsFile(credentialsPath)
+	app, err := firebase.NewApp(ctx, nil, sa)
 	if err != nil {
-		return nil, fmt.Errorf("failed to initialize Firebase app: %v", err)
+		return nil, err
 	}
 
 	client, err := app.Firestore(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create Firestore client: %v", err)
+		return nil, err
 	}
-
-	log.Println("Firestore client created successfully")
 	return client, nil
 }
