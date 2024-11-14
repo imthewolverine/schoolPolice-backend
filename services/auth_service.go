@@ -31,7 +31,7 @@ func (s *AuthService) AuthenticateUser(ctx context.Context, usernameOrEmail, pas
     }
 
     // Generate JWT if authentication succeeds
-    return s.GenerateJWT(userDoc["name"].(string))
+    return s.GenerateJWT(userDoc["id"].(string), userDoc["name"].(string))
 }
 
 // findUserByUsernameOrEmail searches Firestore for a user by name or email
@@ -45,7 +45,9 @@ func (s *AuthService) findUserByUsernameOrEmail(ctx context.Context, usernameOrE
         return nil, err
     }
     if len(emailDocs) > 0 {
-        return emailDocs[0].Data(), nil
+        userData := emailDocs[0].Data()
+        userData["id"] = emailDocs[0].Ref.ID  // Add document ID to data
+        return userData, nil
     }
 
     // Check by name
@@ -55,16 +57,19 @@ func (s *AuthService) findUserByUsernameOrEmail(ctx context.Context, usernameOrE
         return nil, err
     }
     if len(nameDocs) > 0 {
-        return nameDocs[0].Data(), nil
+        userData := nameDocs[0].Data()
+        userData["id"] = nameDocs[0].Ref.ID  // Add document ID to data
+        return userData, nil
     }
 
     return nil, errors.New("user not found")
 }
 
 // GenerateJWT creates a JWT token
-func (s *AuthService) GenerateJWT(username string) (string, error) {
+func (s *AuthService) GenerateJWT(userID, username string) (string, error) {
     secret := config.GetEnv("JWT_SECRET")
     token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+        "user_id":  userID,     // Include user_id in the token
         "username": username,
         "exp":      time.Now().Add(time.Hour * 72).Unix(),
     })

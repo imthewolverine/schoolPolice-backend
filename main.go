@@ -11,52 +11,60 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/imthewolverine/schoolPolice-backend/config"
 	"github.com/imthewolverine/schoolPolice-backend/routes"
-	"google.golang.org/api/option"
 )
 
-
 func main() {
-    // Load environment variables
-    config.LoadEnv()
-    // Initialize context
-    ctx := context.Background()
+	log.Println("Starting application...")
 
-    // Setup Firestore client
-    firestoreClient, err := setupFirestore(ctx)
-    if err != nil {
-        log.Fatalf("failed to set up Firestore: %v", err)
-    }
-    defer firestoreClient.Close()
+	// Load environment variables
+	config.LoadEnv()
+	log.Println("Environment variables loaded")
 
-    // Initialize Gin router
-    r := gin.Default()
+	// Initialize context
+	ctx := context.Background()
 
-    // Pass Firestore client to routes
-    routes.RegisterRoutes(r, firestoreClient)
+	// Setup Firestore client
+	firestoreClient, err := setupFirestore(ctx)
+	if err != nil {
+		log.Fatalf("Failed to set up Firestore: %v", err)
+	}
+	defer firestoreClient.Close()
+	log.Println("Firestore client successfully initialized")
 
-    // Start server
-    r.Run(":8080") // Run on port 8080
+	// Initialize Gin router
+	r := gin.Default()
+
+	// Pass Firestore client to routes
+	routes.RegisterRoutes(r, firestoreClient)
+	log.Println("Routes registered successfully")
+
+	// Use PORT environment variable from Cloud Run
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080" // Default to 8080 if PORT is not set
+	}
+	log.Printf("Starting server on port %s", port)
+
+	// Listen and serve on the specified port
+	if err := r.Run(":" + port); err != nil {
+		log.Fatalf("Failed to start server: %v", err)
+	}
 }
 
 func setupFirestore(ctx context.Context) (*firestore.Client, error) {
-    credentialsPath := os.Getenv("GOOGLE_APPLICATION_CREDENTIALS")
-    
-    if credentialsPath == "" {
-        return nil, fmt.Errorf("GOOGLE_APPLICATION_CREDENTIALS is not set")
-    }
-    
-    // Initialize Firebase app with credentials
-    sa := option.WithCredentialsFile(credentialsPath)
-    app, err := firebase.NewApp(ctx, nil, sa) // Omit ProjectID if credentials contain it
-    if err != nil {
-        return nil, err
-    }
+	log.Println("Initializing Firestore...")
 
-    client, err := app.Firestore(ctx)
-    if err != nil {
-        return nil, err
-    }
+	// Initialize Firebase app with default credentials on Cloud Run
+	app, err := firebase.NewApp(ctx, nil) // No credentials file needed for default account
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize Firebase app: %v", err)
+	}
 
-    return client, nil
+	client, err := app.Firestore(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create Firestore client: %v", err)
+	}
+
+	log.Println("Firestore client created successfully")
+	return client, nil
 }
-
