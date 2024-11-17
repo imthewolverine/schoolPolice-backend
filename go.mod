@@ -12,6 +12,14 @@ require (
 )
 
 require (
+	firebase.google.com/go/v4 v4.7.0 // indirect
+	github.com/MicahParks/keyfunc v1.9.0 // indirect
+	github.com/appleboy/go-fcm v0.1.7 // indirect
+	github.com/golang-jwt/jwt/v4 v4.5.0 // indirect
+	google.golang.org/appengine/v2 v2.0.6 // indirect
+)
+
+require (
 	cel.dev/expr v0.16.1 // indirect
 	cloud.google.com/go v0.116.0 // indirect
 	cloud.google.com/go/auth v0.10.1 // indirect

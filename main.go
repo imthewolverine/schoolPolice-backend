@@ -1,6 +1,45 @@
 package main
 
 import (
+	"log"
+	"os"
+
+	"github.com/gin-gonic/gin"
+	"github.com/imthewolverine/schoolPolice-backend/config"
+	"github.com/imthewolverine/schoolPolice-backend/routes"
+	"github.com/imthewolverine/schoolPolice-backend/services"
+)
+
+func main() {
+	// Load environment variables
+	config.LoadEnv()
+
+	// Check that GOOGLE_APPLICATION_CREDENTIALS is set
+	credentialsPath := os.Getenv("GOOGLE_APPLICATION_CREDENTIALS")
+	if credentialsPath == "" {
+		log.Fatalf("GOOGLE_APPLICATION_CREDENTIALS is not set")
+	}
+
+	// Initialize Firebase (both Firestore and FCM)
+	err := services.InitializeFirebase()
+	if err != nil {
+		log.Fatalf("Failed to initialize Firebase: %v", err)
+	}
+	defer services.CloseFirestoreClient() // Close Firestore client on exit
+
+	// Set up the Gin router
+	r := gin.Default()
+
+	// Register routes and pass Firestore client from services
+	routes.RegisterRoutes(r, services.GetFirestoreClient())
+
+	// Start the server
+	r.Run("0.0.0.0:8080") // replace with localhost:8080 if testing on the same device
+}
+
+/*package main
+
+import (
 	"context"
 	"fmt"
 	"log"
@@ -17,24 +56,21 @@ import (
 func main() {
 	// Load environment variables
 	config.LoadEnv()
-	// Initialize context
-	ctx := context.Background()
 
-	// Setup Firestore client
-	firestoreClient, err := setupFirestore(ctx)
+	// Initialize Firestore
+	firestoreClient, err := setupFirestore(context.Background())
 	if err != nil {
-		log.Fatalf("failed to set up Firestore: %v", err)
+		log.Fatalf("Failed to initialize Firestore: %v", err)
 	}
-	defer firestoreClient.Close()
 
-	// Initialize Gin router
+	// Set up the Gin router
 	r := gin.Default()
 
-	// Pass Firestore client to routes
+	// Register all routes, passing the Firestore client to the router
 	routes.RegisterRoutes(r, firestoreClient)
 
-	// Start server
-	r.Run(":8080") // Run on port 8080
+	// Start the server
+	r.Run("0.0.0.0:8080")
 }
 
 func setupFirestore(ctx context.Context) (*firestore.Client, error) {
@@ -43,7 +79,6 @@ func setupFirestore(ctx context.Context) (*firestore.Client, error) {
 		return nil, fmt.Errorf("GOOGLE_APPLICATION_CREDENTIALS is not set")
 	}
 
-	// Initialize Firebase app with credentials
 	sa := option.WithCredentialsFile(credentialsPath)
 	app, err := firebase.NewApp(ctx, nil, sa)
 	if err != nil {
@@ -56,4 +91,4 @@ func setupFirestore(ctx context.Context) (*firestore.Client, error) {
 	}
 
 	return client, nil
-}
+}*/
