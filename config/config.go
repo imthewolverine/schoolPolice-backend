@@ -9,13 +9,15 @@ import (
 )
 
 func LoadEnv() {
-    err := godotenv.Load(".env")
-    
-    fmt.Printf("Loaded .env file\n");
-    if err != nil {
-        log.Fatalf("Error loading .env file")
+    // Attempt to load using both relative and absolute paths for robustness
+    if err := godotenv.Load(".env"); err != nil {
+        if err := godotenv.Load("/app/.env"); err != nil {
+            log.Fatalf("Error loading .env file")
+        }
     }
+    fmt.Println("Loaded .env file")
 }
+
 
 func GetEnv(key string) string {
     return os.Getenv(key)
